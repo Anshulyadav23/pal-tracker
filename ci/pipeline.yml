@@ -65,7 +65,7 @@ jobs:
     passed: [build]
   - put: review-deployment
     params:
-      manifest: pal-tracker/man ifest-review.yml
+      manifest: pal-tracker/manifest-review.yml
       path: pal-tracker-artifacts/pal-tracker-*.jar
       environment_variables:
         WELCOME_MESSAGE: "Hello from the review environment"
