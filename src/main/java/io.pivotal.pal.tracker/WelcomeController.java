@@ -14,7 +14,7 @@ public class WelcomeController {
      this.message=message;
   }
 
-    @GetMapping("/")
+    @GetMapping("/message")
     public String sayHello() {
         return message;
     }

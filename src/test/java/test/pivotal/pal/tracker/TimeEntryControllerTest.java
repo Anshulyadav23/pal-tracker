@@ -29,17 +29,17 @@ public class TimeEntryControllerTest {
 
     @Test
     public void testCreate() throws Exception {
-        TimeEntry timeEntryToCreate = new TimeEntry(123L, 456L, LocalDate.parse("2017-01-08"), 8);
+        TimeEntry timeEntryControllerToCreate = new TimeEntry(123L, 456L, LocalDate.parse("2017-01-08"), 8);
         TimeEntry expectedResult = new TimeEntry(1L, 123L, 456L, LocalDate.parse("2017-01-08"), 8);
         doReturn(expectedResult)
             .when(timeEntryRepository)
             .create(any(TimeEntry.class));
 
 
-        ResponseEntity response = controller.create(timeEntryToCreate);
+        ResponseEntity response = controller.create(timeEntryControllerToCreate);
 
 
-        verify(timeEntryRepository).create(timeEntryToCreate);
+        verify(timeEntryRepository).create(timeEntryControllerToCreate);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isEqualTo(expectedResult);
     }

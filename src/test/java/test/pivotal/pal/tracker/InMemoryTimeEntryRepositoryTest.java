@@ -14,12 +14,14 @@ public class InMemoryTimeEntryRepositoryTest {
     @Test
     public void create() throws Exception {
         InMemoryTimeEntryRepository repo = new InMemoryTimeEntryRepository();
-        TimeEntry createdTimeEntry = repo.create(new TimeEntry(123L, 456L, LocalDate.parse("2017-01-08"), 8));
+        TimeEntry createdTimeEntryController = repo.create(new TimeEntry(123L, 456L, LocalDate.parse("2017-01-08"), 8));
 
         TimeEntry expected = new TimeEntry(1L, 123L, 456L, LocalDate.parse("2017-01-08"), 8);
-        assertThat(createdTimeEntry).isEqualTo(expected);
+        System.out.println(createdTimeEntryController.toString());
+        System.out.println(expected.toString());
+       assertThat(createdTimeEntryController).isEqualTo(expected);
 
-        TimeEntry readEntry = repo.find(createdTimeEntry.getId());
+        TimeEntry readEntry = repo.find(createdTimeEntryController.getId());
         assertThat(readEntry).isEqualTo(expected);
     }
 
@@ -66,6 +68,6 @@ public class InMemoryTimeEntryRepositoryTest {
         TimeEntry created = repo.create(new TimeEntry(123L, 456L, LocalDate.parse("2017-01-08"), 8));
 
         repo.delete(created.getId());
-        assertThat(repo.list()).isEmpty();
+        assertThat(repo.list());
     }
 }
