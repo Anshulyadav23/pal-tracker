@@ -18,6 +18,8 @@ dependencies {
     compile("mysql:mysql-connector-java:6.0.6")
 
     testCompile("org.springframework.boot:spring-boot-starter-test")
+
+    compile("org.springframework.boot:spring-boot-starter-actuator")
 }
 
 def developmentDbUrl = "jdbc:mysql://localhost:3306/tracker_dev?user=tracker&useSSL=false&useTimezone=true&serverTimezone=UTC&useLegacyDatetimeCode=false"
@@ -42,3 +44,16 @@ flyway {
 task testMigrate(type: FlywayMigrateTask) {
     url = testDbUrl
 }
+
+bootRun.environment([
+    "MANAGEMENT_SECURITY_ENABLED": false,
+])
+
+test.environment([
+        "MANAGEMENT_SECURITY_ENABLED": false,
+])
+
+springBoot {
+    buildInfo()
+}
+
