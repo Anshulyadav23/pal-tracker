@@ -1,9 +1,10 @@
 package test.pivotal.pal.trackerapi;
 
 import com.jayway.jsonpath.DocumentContext;
-import com.sun.org.apache.regexp.internal.RE;
+import com.mysql.cj.jdbc.MysqlDataSource;
 import io.pivotal.pal.tracker.PalTrackerApplication;
 import io.pivotal.pal.tracker.TimeEntry;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +14,12 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.TimeZone;
 
 import static com.jayway.jsonpath.JsonPath.parse;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,17 +27,28 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = PalTrackerApplication.class, webEnvironment = RANDOM_PORT)
-public class TimeEntryControllerApiTest {
+public class TimeEntryApiTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
 
-    private TimeEntry timeEntryController = new TimeEntry(123L, 456L, LocalDate.parse("2017-01-08"), 8);
+    private TimeEntry timeEntry = new TimeEntry(123L, 456L, LocalDate.parse("2017-01-08"), 8);
+
+    @Before
+    public void setUp() throws Exception {
+        MysqlDataSource dataSource = new MysqlDataSource();
+        dataSource.setUrl(System.getenv("SPRING_DATASOURCE_URL"));
+
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        jdbcTemplate.execute("TRUNCATE time_entries");
+
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    }
 
     @Test
     public void testCreate() throws Exception {
-        ResponseEntity<String> createResponse = restTemplate.postForEntity("/time-entries", timeEntryController, String.class);
-        System.out.println(createResponse.toString());
+        ResponseEntity<String> createResponse = restTemplate.postForEntity("/time-entries", timeEntry, String.class);
+
 
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
@@ -53,16 +67,16 @@ public class TimeEntryControllerApiTest {
 
         ResponseEntity<String> listResponse = restTemplate.getForEntity("/time-entries", String.class);
 
-        System.out.println(listResponse.toString());
+
         assertThat(listResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-//
-//        DocumentContext listJson = parse(listResponse.getBody());
-//
-//        Collection timeEntries = listJson.read("$[*]", Collection.class);
-//        assertThat(timeEntries.size()).isEqualTo(1);
-//
-//        Long readId = listJson.read("$[0].id", Long.class);
-//        assertThat(readId).isEqualTo(id);
+
+        DocumentContext listJson = parse(listResponse.getBody());
+
+        Collection timeEntries = listJson.read("$[*]", Collection.class);
+        assertThat(timeEntries.size()).isEqualTo(1);
+
+        Long readId = listJson.read("$[0].id", Long.class);
+        assertThat(readId).isEqualTo(id);
     }
 
     @Test
@@ -71,7 +85,7 @@ public class TimeEntryControllerApiTest {
 
 
         ResponseEntity<String> readResponse = this.restTemplate.getForEntity("/time-entries/" + id, String.class);
-        System.out.println(readResponse.toString());
+
 
         assertThat(readResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         DocumentContext readJson = parse(readResponse.getBody());
@@ -85,10 +99,10 @@ public class TimeEntryControllerApiTest {
     @Test
     public void testUpdate() throws Exception {
         Long id = createTimeEntry();
-        TimeEntry updatedTimeEntryController = new TimeEntry(2L, 3L, LocalDate.parse("2017-01-09"), 9);
+        TimeEntry updatedTimeEntry = new TimeEntry(2L, 3L, LocalDate.parse("2017-01-09"), 9);
 
 
-        ResponseEntity<String> updateResponse = restTemplate.exchange("/time-entries/" + id, HttpMethod.PUT, new HttpEntity<>(updatedTimeEntryController, null), String.class);
+        ResponseEntity<String> updateResponse = restTemplate.exchange("/time-entries/" + id, HttpMethod.PUT, new HttpEntity<>(updatedTimeEntry, null), String.class);
 
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -116,7 +130,7 @@ public class TimeEntryControllerApiTest {
     }
 
     private Long createTimeEntry() {
-        HttpEntity<TimeEntry> entity = new HttpEntity<>(timeEntryController);
+        HttpEntity<TimeEntry> entity = new HttpEntity<>(timeEntry);
 
         ResponseEntity<TimeEntry> response = restTemplate.exchange("/time-entries", HttpMethod.POST, entity, TimeEntry.class);
 
